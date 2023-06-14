@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -21,11 +22,38 @@ const userSchema = new mongoose.Schema({
         minLength: 8,
         maxLength: 100,
     },
+    googleId: {
+        type: String,
+        default: null,
+    },
+    facebookId: {
+        type: String,
+        default: null,
+    },
+    level: {
+      type: String,
+      enum: ['local', 'google', 'facebook'],
+      default: 'local',
+    },
     isAdmin: {
         type: Boolean,
         default: false,
 
     },
 }, { timestamps: true });
+
+userSchema.pre('save', async function (next) {
+    try {
+        if (this.level !== 'local') {
+           next();
+        } else {
+            const salt = await bcrypt.genSalt();
+            this.password = await bcrypt.hash(this.password, salt);
+            next();
+        }
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default mongoose.model("User", userSchema);

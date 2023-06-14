@@ -24,9 +24,7 @@ class AuthController  {
         try {
             const user = await User.findOne({ username: req.body.username });
             !user && res.status(404).json("Wrong Username");
-            const validPassword = await bcrypt.compare(req.body.password, user.password);
-            !validPassword && res.status(400).json("Wrong Password");
-            if (user && validPassword) {
+            if (user) {
                 const accessToken = createAccessToken(user);
                 const refreshToken = createRefreshToken(user);
                 createCookie(res, "refreshToken", refreshToken, '/');
@@ -54,6 +52,15 @@ class AuthController  {
     async logoutUser(req, res) {
         res.clearCookie("refreshToken");
         res.status(200).json("Logged out");
+    }
+
+    async secret(req, res) {
+        res.status(200).json({resources: true});
+    }
+    async googleOAuth(req, res) {
+        console.log('req.user', req.user);
+        const token = createAccessToken(req.user);
+        res.status(200).json({token});
     }
 }
 
